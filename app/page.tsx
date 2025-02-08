@@ -166,8 +166,22 @@ export default function CalendarPage() {
     setData(newData);
   }, [selectedYear, generateDataForYear]);
 
+  const handleYearChangeBlur = (e: ChangeEvent<HTMLInputElement>) => {
+    const newYear: number = Number(e.target.value);
+    if(newYear < 1000) {
+      e.target.value = "1000";
+    } else if (newYear > 9999){
+      e.target.value = "9999";
+    } else {
+      setSelectedYear(Number(e.target.value));
+    }
+  };
+
   const handleYearChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSelectedYear(Number(e.target.value));
+    const newYear: number = Number(e.target.value);
+    if(newYear >= 1000 && newYear <= 9999) {
+      setSelectedYear(Number(e.target.value));
+    }
   };
 
   const onDayClick = (rowIndex: number, colIndex: number) => {
@@ -215,7 +229,7 @@ export default function CalendarPage() {
             bg = "bg-gray-600";
             text = "text-white";
           } else if (isSaturday) {
-            bg = "bg-gray-500";
+            bg = "bg-gray-300";
           } else if (isSunday || isHoliday) {
             bg = "bg-red-500";
           }
@@ -241,35 +255,33 @@ export default function CalendarPage() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const possibleYears = useMemo(() => {
-    const current = new Date().getFullYear();
-    return Array.from({ length: 9 }, (_, i) => current - 1 + i);
-  }, []);
-
   return (
     <div className="h-[100vh] w-[100vw] flex align-center justify-center flex-col">
       <div className="mb-4 flex items-center gap-2 ml-12">
-        <label className="font-semibold">Wybierz rok:</label>
+        <div className="w-26 h-10">
+          <label className="font-semibold">Wybierz rok</label>
+          <p className="text-[70%] text-gray-500 w-[100%] flex justify-center">(1000-9999)</p>
+        </div>
         <input
             type="number"
             placeholder="Wprowadź liczbę"
             className="border border-gray-300 rounded p-2"
+            onBlur={handleYearChangeBlur}
             onChange={handleYearChange}
             defaultValue={new Date().getFullYear()}
             minLength={4}
             maxLength={4}
           />
       </div>
-
       <div className="overflow-auto ml-12">
-        <table className="min-w-max border-collapse border border-gray-400">
+        <table className="min-w-max border-collapse border border-gray-200">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="border border-gray-300 px-3 py-2 text-center"
+                    className="border border-gray-200 px-3 py-2 text-center"
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -286,7 +298,7 @@ export default function CalendarPage() {
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="border border-gray-300 p-0"
+                    className="border border-gray-200 p-0"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
