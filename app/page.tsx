@@ -19,7 +19,9 @@ import {
 
 interface DayInfo {
   dayNumber: number;    
-  isWeekend: boolean;  
+  isHoliday: boolean;  
+  isSaturday: boolean;  
+  isSunday: boolean;  
   isSelected: boolean;  
 }
 
@@ -130,21 +132,25 @@ export default function CalendarPage() {
       const days: DayInfo[] = [];
       for (let dayNumber = 1; dayNumber <= daysInThisMonth; dayNumber++) {
         const weekday = new Date(year, monthIndex, dayNumber).getDay();
-        let isWeekend = (weekday === 0 || weekday === 6);
+        let isSunday = weekday === 0;
+        let isSaturday = weekday === 6;
+        let isHoliday = false;
 
-        if (!isWeekend) {
+        if (!isSunday && !isSaturday) {
           if (publicHolidays.some(([d, m]) => d === dayNumber && m === monthIndex)) {
-            isWeekend = true;
+            isHoliday = true;
           }
         }
 
         days.push({
           dayNumber,
-          isWeekend,
+          isSaturday,
+          isSunday,
           isSelected: false,
+          isHoliday
         });
-      }
 
+      }
       rows.push({
         monthName,
         days,
@@ -160,7 +166,7 @@ export default function CalendarPage() {
     setData(newData);
   }, [selectedYear, generateDataForYear]);
 
-  const handleYearChange = (e: ChangeEvent<HTMLSelectElement>) => {
+  const handleYearChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSelectedYear(Number(e.target.value));
   };
 
@@ -182,7 +188,7 @@ export default function CalendarPage() {
     id: "monthName",
     cell: ({ row }) => {
       const { monthName } = row.original;
-      return <span className="font-bold whitespace-nowrap">{monthName}</span>;
+      return <span className="whitespace-nowrap text-left pl-2 pr-4">{monthName}</span>;
     },
   };
 
@@ -200,7 +206,7 @@ export default function CalendarPage() {
             return null;
           }
           const dayInfo = days[dayNumber - 1];
-          const { isSelected, isWeekend } = dayInfo;
+          const { isSelected, isSaturday, isSunday, isHoliday } = dayInfo;
 
           let bg = "bg-transparent";
           let text = "text-black";
@@ -208,13 +214,15 @@ export default function CalendarPage() {
           if (isSelected) {
             bg = "bg-gray-600";
             text = "text-white";
-          } else if (isWeekend) {
-            bg = "bg-red-200";
+          } else if (isSaturday) {
+            bg = "bg-gray-500";
+          } else if (isSunday || isHoliday) {
+            bg = "bg-red-500";
           }
 
           return (
             <div
-              className={`cursor-pointer text-center p-1 h-[100%] w-[100%] ${bg} ${text}`}
+              className={`cursor-pointer text-center p-2 h-[100%] w-[100%] ${bg} ${text}`}
               onClick={() => onDayClick(rowId, colIndex)}
             >
               {dayInfo.dayNumber}
@@ -239,33 +247,29 @@ export default function CalendarPage() {
   }, []);
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Kalendarz {selectedYear}</h1>
-
-      <div className="mb-4 flex items-center gap-2">
+    <div className="h-[100vh] w-[100vw] flex align-center justify-center flex-col">
+      <div className="mb-4 flex items-center gap-2 ml-12">
         <label className="font-semibold">Wybierz rok:</label>
-        <select
-          className="border border-gray-300 rounded p-1"
-          value={selectedYear}
-          onChange={handleYearChange}
-        >
-          {possibleYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+        <input
+            type="number"
+            placeholder="Wprowadź liczbę"
+            className="border border-gray-300 rounded p-2"
+            onChange={handleYearChange}
+            defaultValue={new Date().getFullYear()}
+            minLength={4}
+            maxLength={4}
+          />
       </div>
 
-      <div className="overflow-auto">
+      <div className="overflow-auto ml-12">
         <table className="min-w-max border-collapse border border-gray-400">
-          <thead className="bg-gray-100">
+          <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="border border-gray-300 px-2 py-1 text-center"
+                    className="border border-gray-300 px-3 py-2 text-center"
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -278,11 +282,11 @@ export default function CalendarPage() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="even:bg-gray-50">
+              <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="border border-gray-300 p-0 text-center align-middle"
+                    className="border border-gray-300 p-0"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
