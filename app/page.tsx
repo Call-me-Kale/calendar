@@ -214,7 +214,7 @@ export default function CalendarPage() {
 
           return (
             <div
-              className={`cursor-pointer text-center p-1 w-8 ${bg} ${text}`}
+              className={`cursor-pointer text-center p-1 h-[100%] w-[100%] ${bg} ${text}`}
               onClick={() => onDayClick(rowId, colIndex)}
             >
               {dayInfo.dayNumber}
