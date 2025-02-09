@@ -57,6 +57,7 @@ Aplikacja będzie dostępna pod adresem: [http://localhost:3000](http://localhos
 
   - **computeEasterSunday(year):**  
     Oblicza datę Wielkanocy dla podanego roku. Wynik jest wykorzystywany przy generowaniu listy świąt publicznych.
+    W obliczeniach wykorzystany został algorytm Meeusa/Jonesa/Butchera (znany również jako Anonymous Gregorian algorithm), który precyzyjnie oblicza datę Wielkanocy w kalendarzu gregoriańskim.
 
   - **getPublicHolidays(year):**  
     Zwraca tablicę świąt publicznych dla danego roku, w tym święta związane z Wielkanocą. Umożliwia oznaczenie świąt w kalendarzu.
