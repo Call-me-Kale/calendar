@@ -1,7 +1,5 @@
 # Calendar App
 
-## Wprowadzenie
-
 **Calendar App** to interaktywna aplikacja kalendarza stworzona przy użyciu Next.js, React, Tailwind CSS oraz @tanstack/react-table. Aplikacja umożliwia:
 
 - Wybór roku (od 1000 do 9999)
