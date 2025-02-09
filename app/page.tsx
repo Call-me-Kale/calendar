@@ -5,8 +5,6 @@ import React, {
   useEffect,
   useCallback,
   ChangeEvent,
-  useMemo,
-  JSX,
 } from "react";
 import {
   useReactTable,
@@ -15,20 +13,20 @@ import {
   Table,
   flexRender,
 } from "@tanstack/react-table";
-
+import DayCell from "../components/DayCell"; 
 
 interface DayInfo {
-  dayNumber: number;    
-  isHoliday: boolean;  
-  isSaturday: boolean;  
-  isSunday: boolean;  
-  isSelected: boolean;  
+  dayNumber: number;
+  isHoliday: boolean;
+  isSaturday: boolean;
+  isSunday: boolean;
+  isSelected: boolean;
 }
 
 interface MonthRow {
-  monthName: string; 
-  days: DayInfo[];   
-  offset: number;  
+  monthName: string;
+  days: DayInfo[];
+  offset: number;
 }
 
 type PublicHolidays = Array<[number, number]>;
@@ -50,7 +48,7 @@ const MONTH_NAMES_PL: string[] = [
 
 const WEEKDAY_LABELS_PL: string[] = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "So"];
 
-const DAY_COLUMNS_COUNT = 37; 
+const DAY_COLUMNS_COUNT = 37;
 
 const getPublicHolidays = (year: number): PublicHolidays => {
   const holidays: PublicHolidays = [];
@@ -65,10 +63,9 @@ const getPublicHolidays = (year: number): PublicHolidays => {
   holidays.push([25, 11]);
   holidays.push([26, 11]);
 
-
   const easterSunday = computeEasterSunday(year);
-  const easterMonthIndex = easterSunday.getMonth(); 
-  const easterDayNumber = easterSunday.getDate(); 
+  const easterMonthIndex = easterSunday.getMonth();
+  const easterDayNumber = easterSunday.getDate();
 
   holidays.push([easterDayNumber, easterMonthIndex]);
 
@@ -79,8 +76,7 @@ const getPublicHolidays = (year: number): PublicHolidays => {
   holidays.push([corpusChristi.getDate(), corpusChristi.getMonth()]);
 
   return holidays;
-}
-
+};
 
 const computeEasterSunday = (year: number): Date => {
   const a = year % 19;
@@ -95,22 +91,23 @@ const computeEasterSunday = (year: number): Date => {
   const k = c % 4;
   const l = (32 + 2 * e + 2 * i - h - k) % 7;
   const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1; 
-  const day = ((h + l - 7 * m + 114) % 31) + 1;             
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
   return new Date(year, month, day);
-}
+};
 
 export default function CalendarPage() {
-
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear()
   );
-
   const [data, setData] = useState<MonthRow[]>([]);
 
-  const getDaysInMonth = useCallback((year: number, monthIndex: number): number => {
-    return new Date(year, monthIndex + 1, 0).getDate();
-  }, []);
+  const getDaysInMonth = useCallback(
+    (year: number, monthIndex: number): number => {
+      return new Date(year, monthIndex + 1, 0).getDate();
+    },
+    []
+  );
 
   const getFirstDayOffset = useCallback(
     (year: number, monthIndex: number): number => {
@@ -119,47 +116,51 @@ export default function CalendarPage() {
     []
   );
 
-  const generateDataForYear = useCallback((year: number): MonthRow[] => {
-    const rows: MonthRow[] = [];
+  const generateDataForYear = useCallback(
+    (year: number): MonthRow[] => {
+      const rows: MonthRow[] = [];
+      const publicHolidays = getPublicHolidays(year);
 
-     const publicHolidays = getPublicHolidays(year); 
+      for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+        const monthName = MONTH_NAMES_PL[monthIndex];
+        const offset = getFirstDayOffset(year, monthIndex);
+        const daysInThisMonth = getDaysInMonth(year, monthIndex);
 
-    for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
-      const monthName = MONTH_NAMES_PL[monthIndex];
-      const offset = getFirstDayOffset(year, monthIndex);
-      const daysInThisMonth = getDaysInMonth(year, monthIndex);
+        const days: DayInfo[] = [];
+        for (let dayNumber = 1; dayNumber <= daysInThisMonth; dayNumber++) {
+          const weekday = new Date(year, monthIndex, dayNumber).getDay();
+          const isSunday = weekday === 0;
+          const isSaturday = weekday === 6;
+          let isHoliday = false;
 
-      const days: DayInfo[] = [];
-      for (let dayNumber = 1; dayNumber <= daysInThisMonth; dayNumber++) {
-        const weekday = new Date(year, monthIndex, dayNumber).getDay();
-        let isSunday = weekday === 0;
-        let isSaturday = weekday === 6;
-        let isHoliday = false;
-
-        if (!isSunday && !isSaturday) {
-          if (publicHolidays.some(([d, m]) => d === dayNumber && m === monthIndex)) {
-            isHoliday = true;
+          if (!isSunday && !isSaturday) {
+            if (
+              publicHolidays.some(
+                ([d, m]) => d === dayNumber && m === monthIndex
+              )
+            ) {
+              isHoliday = true;
+            }
           }
+
+          days.push({
+            dayNumber,
+            isSaturday,
+            isSunday,
+            isSelected: false,
+            isHoliday,
+          });
         }
-
-        days.push({
-          dayNumber,
-          isSaturday,
-          isSunday,
-          isSelected: false,
-          isHoliday
+        rows.push({
+          monthName,
+          days,
+          offset,
         });
-
       }
-      rows.push({
-        monthName,
-        days,
-        offset,
-      });
-    }
-
-    return rows;
-  }, [getDaysInMonth, getFirstDayOffset]);
+      return rows;
+    },
+    [getDaysInMonth, getFirstDayOffset]
+  );
 
   useEffect(() => {
     const newData = generateDataForYear(selectedYear);
@@ -168,33 +169,46 @@ export default function CalendarPage() {
 
   const handleYearChangeBlur = (e: ChangeEvent<HTMLInputElement>) => {
     const newYear: number = Number(e.target.value);
-    if(newYear < 1000) {
+    if (newYear < 1000) {
       e.target.value = "1000";
-    } else if (newYear > 9999){
+    } else if (newYear > 9999) {
       e.target.value = "9999";
     } else {
-      setSelectedYear(Number(e.target.value));
+      setSelectedYear(newYear);
     }
   };
 
   const handleYearChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newYear: number = Number(e.target.value);
-    if(newYear >= 1000 && newYear <= 9999) {
-      setSelectedYear(Number(e.target.value));
+    if (newYear >= 1000 && newYear <= 9999) {
+      setSelectedYear(newYear);
     }
   };
 
-  const onDayClick = (rowIndex: number, colIndex: number) => {
-    setData((prev) => {
-      const newData = [...prev];
-      const { offset, days } = newData[rowIndex];
-      const dayNumber = colIndex - offset + 1;
-      if (dayNumber >= 1 && dayNumber <= days.length) {
-        const targetDay = newData[rowIndex].days[dayNumber - 1];
-        targetDay.isSelected = !targetDay.isSelected;
-      }
-      return newData;
-    });
+  const onDayClick = (
+    rowIndex: number,
+    colIndex: number,
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
+    e.stopPropagation();
+    setData((prev) =>
+      prev.map((month, mIndex) => {
+        if (mIndex !== rowIndex) return month;
+
+        const dayNumber = colIndex - month.offset + 1;
+        if (dayNumber < 1 || dayNumber > month.days.length) return month;
+
+        return {
+          ...month,
+          days: month.days.map((day, dIndex) => {
+            if (dIndex === dayNumber - 1) {
+              return { ...day, isSelected: !day.isSelected };
+            }
+            return day;
+          }),
+        };
+      })
+    );
   };
 
   const firstColumn: ColumnDef<MonthRow> = {
@@ -202,7 +216,11 @@ export default function CalendarPage() {
     id: "monthName",
     cell: ({ row }) => {
       const { monthName } = row.original;
-      return <span className="whitespace-nowrap text-left pl-2 pr-4">{monthName}</span>;
+      return (
+        <span className="whitespace-nowrap text-left pl-2 pr-4">
+          {monthName}
+        </span>
+      );
     },
   };
 
@@ -210,37 +228,23 @@ export default function CalendarPage() {
     { length: DAY_COLUMNS_COUNT },
     (_, colIndex) => {
       return {
-        header: WEEKDAY_LABELS_PL[colIndex % 7], 
+        header: WEEKDAY_LABELS_PL[colIndex % 7],
         id: `day-col-${colIndex}`,
         cell: ({ row }) => {
-          const rowId = row.index; 
+          const rowId = row.index;
           const { offset, days } = row.original;
           const dayNumber = colIndex - offset + 1;
           if (dayNumber < 1 || dayNumber > days.length) {
             return null;
           }
           const dayInfo = days[dayNumber - 1];
-          const { isSelected, isSaturday, isSunday, isHoliday } = dayInfo;
-
-          let bg = "bg-transparent";
-          let text = "text-black";
-
-          if (isSelected) {
-            bg = "bg-gray-600";
-            text = "text-white";
-          } else if (isSaturday) {
-            bg = "bg-gray-300";
-          } else if (isSunday || isHoliday) {
-            bg = "bg-red-500";
-          }
-
           return (
-            <div
-              className={`cursor-pointer text-center p-2 h-[100%] w-[100%] ${bg} ${text}`}
-              onClick={() => onDayClick(rowId, colIndex)}
-            >
-              {dayInfo.dayNumber}
-            </div>
+            <DayCell
+              dayInfo={dayInfo}
+              rowIndex={rowId}
+              colIndex={colIndex}
+              onDayClick={onDayClick}
+            />
           );
         },
       };
@@ -250,28 +254,30 @@ export default function CalendarPage() {
   const columns: ColumnDef<MonthRow>[] = [firstColumn, ...dayColumns];
 
   const table: Table<MonthRow> = useReactTable<MonthRow>({
-    data,    
-    columns, 
+    data,
+    columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
-    <div className="h-[100vh] w-[100vw] flex align-center justify-center flex-col">
-      <div className="mb-4 flex items-center gap-2 ml-12">
+    <div className="h-[100vh] w-[100vw] flex justify-center flex-col">
+      <div className="mb-4 flex gap-2 ml-12">
         <div className="w-26 h-10">
           <label className="font-semibold">Wybierz rok</label>
-          <p className="text-[70%] text-gray-500 w-[100%] flex justify-center">(1000-9999)</p>
+          <p className="text-[70%] text-gray-500 w-full flex justify-center">
+            (Rok powinien być 4-cyfrowy)
+          </p>
         </div>
         <input
-            type="number"
-            placeholder="Wprowadź liczbę"
-            className="border border-gray-300 rounded p-2"
-            onBlur={handleYearChangeBlur}
-            onChange={handleYearChange}
-            defaultValue={new Date().getFullYear()}
-            minLength={4}
-            maxLength={4}
-          />
+          type="number"
+          placeholder="Wprowadź liczbę"
+          className="border border-gray-300 rounded p-2"
+          onBlur={handleYearChangeBlur}
+          onChange={handleYearChange}
+          defaultValue={new Date().getFullYear()}
+          minLength={4}
+          maxLength={4}
+        />
       </div>
       <div className="overflow-auto ml-12">
         <table className="min-w-max border-collapse border border-gray-200">
@@ -296,10 +302,7 @@ export default function CalendarPage() {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="border border-gray-200 p-0"
-                  >
+                  <td key={cell.id} className="border border-gray-200 p-0">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
