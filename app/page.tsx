@@ -78,6 +78,12 @@ const getPublicHolidays = (year: number): PublicHolidays => {
   return holidays;
 };
 
+
+/**
+ * Liczy datę Wielkanocy wg algorytmu Meeusa (lub Gaussa) dla zachodniego obrządku.
+ * Zwraca obiekt Date, który jest niedzielą wielkanocną.
+ */
+
 const computeEasterSunday = (year: number): Date => {
   const a = year % 19;
   const b = Math.floor(year / 100);
@@ -160,6 +166,8 @@ export default function CalendarPage() {
     setData(generateDataForYear(selectedYear));
   }, [selectedYear, generateDataForYear]);
 
+  // Wywoływany przy opuszczeniu pola input (onBlur). 
+  //Jeśli wpisany rok jest mniejszy niż 1000 lub większy niż 9999, ustawia wartość graniczną (odpowiednio 1000 lub 9999) i aktualizuje stan.
   const handleYearChangeBlur = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       let newYear = Number(e.target.value);
@@ -169,7 +177,7 @@ export default function CalendarPage() {
     },
     []
   );
-
+  // Obsługuje zmianę wartości w polu input, gdy użytkownik wpisuje nowy rok. Jeśli wpisany rok mieści się w zakresie 1000–9999, aktualizuje stan wybranego roku.
   const handleYearChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const newYear = Number(e.target.value);
@@ -177,6 +185,8 @@ export default function CalendarPage() {
     },
     []
   );
+
+  //Obsługuje kliknięcie w komórkę kalendarza. Przełącza stan zaznaczenia (`isSelected`) dla klikniętego dnia, 
 
   const onDayClick = useCallback(
     (
@@ -260,6 +270,8 @@ export default function CalendarPage() {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // Dane kalendarza są prezentowane w tabeli za pomocą biblioteki `@tanstack/react-table`. Do renderowania poszczególnych komórek wykorzystywany jest komponent `DayCell`.
+  
   return (
     <div className="h-[100vh] w-[100vw] flex justify-center flex-col">
       <div className="mb-4 flex gap-2 ml-12">

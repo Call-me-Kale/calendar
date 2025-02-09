@@ -7,14 +7,15 @@
 
 ## Instalacja i Uruchomienie
 
-Aby zainstalować i uruchomić aplikację, wykonaj następujące kroki:
+Aby zainstalować i uruchomić aplikację, wykonaj następujące kroki i upewnij się ,że posiadasz na swojej stacji roboczej node.js:
 
 1. Zainstaluj zależności:
 
-npm i
+wprowadź komędę 'npm i'
 
 2. Uruchom aplikację:
 
+wprowadź komędę 'npm run dev' ,żeby odpalić lokalnie aplikację 
 Aplikacja będzie dostępna pod adresem: [http://localhost:3000](http://localhost:3000).
 
 

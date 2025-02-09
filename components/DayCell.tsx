@@ -17,6 +17,8 @@ interface DayCellProps {
   ) => void;
 }
 
+// ten komponent generuje komórkę tabeli
+
 const DayCell: React.FC<DayCellProps> = React.memo(
   ({ dayInfo, rowIndex, colIndex, onDayClick }) => {
     let bg = "bg-transparent";
