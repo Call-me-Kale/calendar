@@ -5,15 +5,15 @@ import React, {
   useEffect,
   useCallback,
   ChangeEvent,
+  useMemo,
 } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   ColumnDef,
-  Table,
   flexRender,
 } from "@tanstack/react-table";
-import DayCell from "../components/DayCell"; 
+import DayCell from "../components/DayCell";
 
 interface DayInfo {
   dayNumber: number;
@@ -52,16 +52,16 @@ const DAY_COLUMNS_COUNT = 37;
 
 const getPublicHolidays = (year: number): PublicHolidays => {
   const holidays: PublicHolidays = [];
-  
-  holidays.push([1, 0]);  
-  holidays.push([6, 0]);  
-  holidays.push([1, 4]); 
+
+  holidays.push([1, 0]);
+  holidays.push([6, 0]);
+  holidays.push([1, 4]);
   holidays.push([3, 4]); 
-  holidays.push([15, 7]); 
+  holidays.push([15, 7]);
   holidays.push([1, 10]); 
   holidays.push([11, 10]);
-  holidays.push([25, 11]);
-  holidays.push([26, 11]);
+  holidays.push([25, 11]); 
+  holidays.push([26, 11]); 
 
   const easterSunday = computeEasterSunday(year);
   const easterMonthIndex = easterSunday.getMonth();
@@ -103,16 +103,14 @@ export default function CalendarPage() {
   const [data, setData] = useState<MonthRow[]>([]);
 
   const getDaysInMonth = useCallback(
-    (year: number, monthIndex: number): number => {
-      return new Date(year, monthIndex + 1, 0).getDate();
-    },
+    (year: number, monthIndex: number): number =>
+      new Date(year, monthIndex + 1, 0).getDate(),
     []
   );
 
   const getFirstDayOffset = useCallback(
-    (year: number, monthIndex: number): number => {
-      return new Date(year, monthIndex, 1).getDay();
-    },
+    (year: number, monthIndex: number): number =>
+      new Date(year, monthIndex, 1).getDay(),
     []
   );
 
@@ -151,11 +149,7 @@ export default function CalendarPage() {
             isHoliday,
           });
         }
-        rows.push({
-          monthName,
-          days,
-          offset,
-        });
+        rows.push({ monthName, days, offset });
       }
       return rows;
     },
@@ -163,97 +157,104 @@ export default function CalendarPage() {
   );
 
   useEffect(() => {
-    const newData = generateDataForYear(selectedYear);
-    setData(newData);
+    setData(generateDataForYear(selectedYear));
   }, [selectedYear, generateDataForYear]);
 
-  const handleYearChangeBlur = (e: ChangeEvent<HTMLInputElement>) => {
-    const newYear: number = Number(e.target.value);
-    if (newYear < 1000) {
-      e.target.value = "1000";
-    } else if (newYear > 9999) {
-      e.target.value = "9999";
-    } else {
+  const handleYearChangeBlur = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      let newYear = Number(e.target.value);
+      if (newYear < 1000) newYear = 1000;
+      else if (newYear > 9999) newYear = 9999;
       setSelectedYear(newYear);
-    }
-  };
-
-  const handleYearChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newYear: number = Number(e.target.value);
-    if (newYear >= 1000 && newYear <= 9999) {
-      setSelectedYear(newYear);
-    }
-  };
-
-  const onDayClick = (
-    rowIndex: number,
-    colIndex: number,
-    e: React.MouseEvent<HTMLDivElement>
-  ) => {
-    e.stopPropagation();
-    setData((prev) =>
-      prev.map((month, mIndex) => {
-        if (mIndex !== rowIndex) return month;
-
-        const dayNumber = colIndex - month.offset + 1;
-        if (dayNumber < 1 || dayNumber > month.days.length) return month;
-
-        return {
-          ...month,
-          days: month.days.map((day, dIndex) => {
-            if (dIndex === dayNumber - 1) {
-              return { ...day, isSelected: !day.isSelected };
-            }
-            return day;
-          }),
-        };
-      })
-    );
-  };
-
-  const firstColumn: ColumnDef<MonthRow> = {
-    header: "Miesiąc",
-    id: "monthName",
-    cell: ({ row }) => {
-      const { monthName } = row.original;
-      return (
-        <span className="whitespace-nowrap text-left pl-2 pr-4">
-          {monthName}
-        </span>
-      );
     },
-  };
-
-  const dayColumns: ColumnDef<MonthRow>[] = Array.from(
-    { length: DAY_COLUMNS_COUNT },
-    (_, colIndex) => {
-      return {
-        header: WEEKDAY_LABELS_PL[colIndex % 7],
-        id: `day-col-${colIndex}`,
-        cell: ({ row }) => {
-          const rowId = row.index;
-          const { offset, days } = row.original;
-          const dayNumber = colIndex - offset + 1;
-          if (dayNumber < 1 || dayNumber > days.length) {
-            return null;
-          }
-          const dayInfo = days[dayNumber - 1];
-          return (
-            <DayCell
-              dayInfo={dayInfo}
-              rowIndex={rowId}
-              colIndex={colIndex}
-              onDayClick={onDayClick}
-            />
-          );
-        },
-      };
-    }
+    []
   );
 
-  const columns: ColumnDef<MonthRow>[] = [firstColumn, ...dayColumns];
+  const handleYearChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newYear = Number(e.target.value);
+      if (newYear >= 1000 && newYear <= 9999) setSelectedYear(newYear);
+    },
+    []
+  );
 
-  const table: Table<MonthRow> = useReactTable<MonthRow>({
+  const onDayClick = useCallback(
+    (
+      rowIndex: number,
+      colIndex: number,
+      e: React.MouseEvent<HTMLDivElement>
+    ) => {
+      e.stopPropagation();
+      setData((prev) =>
+        prev.map((month, mIndex) => {
+          if (mIndex !== rowIndex) return month;
+
+          const dayNumber = colIndex - month.offset + 1;
+          if (dayNumber < 1 || dayNumber > month.days.length) return month;
+
+          return {
+            ...month,
+            days: month.days.map((day, dIndex) =>
+              dIndex === dayNumber - 1
+                ? { ...day, isSelected: !day.isSelected }
+                : day
+            ),
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const columns = useMemo<ColumnDef<MonthRow>[]>(() => {
+      const firstColumn: ColumnDef<MonthRow> = {
+        header: "Miesiąc",
+        id: "monthName",
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-left pl-2 pr-4">
+            {row.original.monthName}
+          </span>
+        ),
+      };
+
+    const dayColumnsWithNull: (ColumnDef<MonthRow> | null)[] = Array.from(
+      { length: DAY_COLUMNS_COUNT },
+      (_, colIndex) => {
+        const columnHasData = data.some((row) => {
+          const dayNumber = colIndex - row.offset + 1;
+          return dayNumber >= 1 && dayNumber <= row.days.length;
+        });
+        if (!columnHasData) return null;
+
+        return {
+          header: WEEKDAY_LABELS_PL[colIndex % 7],
+          id: `day-col-${colIndex}`,
+          cell: ({ row }) => {
+            const { offset, days } = row.original;
+            const dayNumber = colIndex - offset + 1;
+            if (dayNumber < 1 || dayNumber > days.length) return null;
+            const dayInfo = days[dayNumber - 1];
+            return (
+              <DayCell
+                dayInfo={dayInfo}
+                rowIndex={row.index}
+                colIndex={colIndex}
+                onDayClick={onDayClick}
+              />
+            );
+          },
+        };
+      }
+    );
+
+    const dayColumns: ColumnDef<MonthRow>[] = dayColumnsWithNull.filter(
+      (col): col is ColumnDef<MonthRow> => col !== null
+    );
+
+    return [firstColumn, ...dayColumns];
+  }, [onDayClick, data]);
+
+  const table = useReactTable<MonthRow>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -265,7 +266,7 @@ export default function CalendarPage() {
         <div className="w-26 h-10">
           <label className="font-semibold">Wybierz rok</label>
           <p className="text-[70%] text-gray-500 w-full flex justify-center">
-            (Rok powinien być 4-cyfrowy)
+            (rok powinien być 4-cyfrowy)
           </p>
         </div>
         <input
