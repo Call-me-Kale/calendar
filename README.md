@@ -11,11 +11,11 @@ Aby zainstalować i uruchomić aplikację, wykonaj następujące kroki i upewnij
 
 1. Zainstaluj zależności:
 
-wprowadź komędę 'npm i'
+Wprowadź komendę 'npm i'
 
 2. Uruchom aplikację:
 
-wprowadź komędę 'npm run dev' ,żeby odpalić lokalnie aplikację 
+Wprowadź komendę 'npm run dev' ,żeby odpalić lokalnie aplikację 
 Aplikacja będzie dostępna pod adresem: [http://localhost:3000](http://localhost:3000).
 
 
