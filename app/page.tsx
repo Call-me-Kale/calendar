@@ -80,7 +80,7 @@ const getPublicHolidays = (year: number): PublicHolidays => {
 
 
 /**
- * Liczy datę Wielkanocy wg algorytmu Meeusa (lub Gaussa) dla zachodniego obrządku.
+ * Liczy datę Wielkanocy wg algorytmu Meeusa/Jonesa/Butchera dla zachodniego obrządku.
  * Zwraca obiekt Date, który jest niedzielą wielkanocną.
  */
 
@@ -119,6 +119,8 @@ export default function CalendarPage() {
       new Date(year, monthIndex, 1).getDay(),
     []
   );
+
+  // generateDataForYear generuje strukturę danych kalendarza dla całego roku.
 
   const generateDataForYear = useCallback(
     (year: number): MonthRow[] => {
@@ -271,7 +273,7 @@ export default function CalendarPage() {
   });
 
   // Dane kalendarza są prezentowane w tabeli za pomocą biblioteki `@tanstack/react-table`. Do renderowania poszczególnych komórek wykorzystywany jest komponent `DayCell`.
-  
+
   return (
     <div className="h-[100vh] w-[100vw] flex justify-center flex-col">
       <div className="mb-4 flex gap-2 ml-12">
